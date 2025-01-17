@@ -430,6 +430,7 @@ void PduSessionReleaseCommand::onBuild(NasMessageBuilder &b)
 {
     b.mandatoryIE(&smCause);
     b.optionalIE(0x37, &backOffTimerValue);
+	b.optionalIE(0x61, &reattemptValue);
     b.optionalIE(0x78, &eapMessage);
     b.optionalIE(0x7B, &extendedProtocolConfigurationOptions);
 }
