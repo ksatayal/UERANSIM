@@ -152,6 +152,16 @@ struct IES1UeNetworkCapability : InformationElement4
     static void Encode(const IES1UeNetworkCapability &ie, OctetString &stream);
 };
 
+struct IECongestionReattemptIndicaotr : InformationElement4
+{
+    int reattemptValue; // 8-bit
+
+    IECongestionReattemptIndicaotr();
+
+    static IECongestionReattemptIndicaotr Decode(const OctetView &stream, int length);
+    static void Encode(const IECongestionReattemptIndicaotr &ie, OctetString &stream);
+};
+
 struct IEGprsTimer3 : InformationElement4
 {
     int timerValue; // 5-bit
@@ -164,6 +174,7 @@ struct IEGprsTimer3 : InformationElement4
     static IEGprsTimer3 Decode(const OctetView &stream, int length);
     static void Encode(const IEGprsTimer3 &ie, OctetString &stream);
 };
+
 
 struct IEAuthenticationFailureParameter : InformationElement4
 {

@@ -431,6 +431,7 @@ struct PduSessionReleaseCommand : SmMessage
 {
     IE5gSmCause smCause{};
     std::optional<IEGprsTimer3> backOffTimerValue{};
+	std::optional<IECongestionReattemptIndicaotr> reattemptValue{};
     std::optional<IEEapMessage> eapMessage{};
     std::optional<IEExtendedProtocolConfigurationOptions> extendedProtocolConfigurationOptions{};
 
