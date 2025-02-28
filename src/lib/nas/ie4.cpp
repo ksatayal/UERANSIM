@@ -314,6 +314,27 @@ void IEGprsTimer3::Encode(const IEGprsTimer3 &ie, OctetString &stream)
     stream.appendOctet(octet);
 }
 
+
+IECongestionReattemptIndicaotr::IECongestionReattemptIndicaotr() : reattemptValue(0)
+{
+}
+
+IECongestionReattemptIndicaotr IECongestionReattemptIndicaotr::Decode(const OctetView &stream, int length)
+{
+    auto oct = stream.read();
+
+    IECongestionReattemptIndicaotr r;
+    r.reattemptValue = bits::BitRange8<0, 7>(oct);
+    return r;
+}
+void IECongestionReattemptIndicaotr::Encode(const IECongestionReattemptIndicaotr &ie, OctetString &stream)
+{
+	// Mocked to avoid crach, not tested
+    int octet = 0x03;	
+    stream.appendOctet(octet);
+}
+
+
 IEAuthenticationFailureParameter::IEAuthenticationFailureParameter(OctetString &&rawData) : rawData(std::move(rawData))
 {
 }
