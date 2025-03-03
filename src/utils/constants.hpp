@@ -1,9 +1,9 @@
 //
-// This file is a part of UERANSIM open source project.
-// Copyright (c) 2021 ALİ GÜNGÖR.
+// This file is a part of UERANSIM project.
+// Copyright (c) 2023 ALİ GÜNGÖR.
 //
-// The software and all associated files are licensed under GPL-3.0
-// and subject to the terms and conditions defined in LICENSE file.
+// https://github.com/aligungr/UERANSIM/
+// See README, LICENSE, and CONTRIBUTING files for licensing details.
 //
 
 #pragma once
@@ -15,10 +15,10 @@ struct cons
     // Version information
     static constexpr const uint8_t Major = 3;
     static constexpr const uint8_t Minor = 2;
-    static constexpr const uint8_t Patch = 6;
+    static constexpr const uint8_t Patch = 7;
     static constexpr const char *Project = "UERANSIM";
-    static constexpr const char *Tag = "v3.2.6";
-    static constexpr const char *Name = "UERANSIM v3.2.6";
+    static constexpr const char *Tag = "v3.2.7";
+    static constexpr const char *Name = "UERANSIM v3.2.7";
     static constexpr const char *Owner = "ALİ GÜNGÖR";
 
     // Some port values
@@ -27,6 +27,7 @@ struct cons
 
     // TUN interface
     static constexpr const char *TunNamePrefix = "uesimtun";
+    static constexpr const char *TunNetmask = "255.255.0.0";
     static constexpr const int TunMtu = 1400;
 
     // Constraints

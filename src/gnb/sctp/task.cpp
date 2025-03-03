@@ -1,9 +1,9 @@
 //
-// This file is a part of UERANSIM open source project.
-// Copyright (c) 2021 ALİ GÜNGÖR.
+// This file is a part of UERANSIM project.
+// Copyright (c) 2023 ALİ GÜNGÖR.
 //
-// The software and all associated files are licensed under GPL-3.0
-// and subject to the terms and conditions defined in LICENSE file.
+// https://github.com/aligungr/UERANSIM/
+// See README, LICENSE, and CONTRIBUTING files for licensing details.
 //
 
 #include "task.hpp"
@@ -195,7 +195,7 @@ void SctpTask::receiveSctpConnectionSetupRequest(int clientId, const std::string
 {
     m_logger->info("Trying to establish SCTP connection... (%s:%d)", remoteAddress.c_str(), remotePort);
 
-    auto *client = new sctp::SctpClient(ppid);
+    auto *client = new sctp::SctpClient(ppid, localAddress);
 
     try
     {

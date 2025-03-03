@@ -1,9 +1,9 @@
 //
-// This file is a part of UERANSIM open source project.
-// Copyright (c) 2021 ALİ GÜNGÖR.
+// This file is a part of UERANSIM project.
+// Copyright (c) 2023 ALİ GÜNGÖR.
 //
-// The software and all associated files are licensed under GPL-3.0
-// and subject to the terms and conditions defined in LICENSE file.
+// https://github.com/aligungr/UERANSIM/
+// See README, LICENSE, and CONTRIBUTING files for licensing details.
 //
 
 #include "mm.hpp"
@@ -70,7 +70,7 @@ void NasMm::receiveAuthenticationRequestEap(const nas::AuthenticationRequest &ms
 
     // ========================== Check the received message syntactically ==========================
 
-    if (!msg.eapMessage.has_value())
+    if (!msg.eapMessage.has_value() || !msg.eapMessage->eap)
     {
         sendMmStatus(nas::EMmCause::SEMANTICALLY_INCORRECT_MESSAGE);
         return;
@@ -176,7 +176,6 @@ void NasMm::receiveAuthenticationRequestEap(const nas::AuthenticationRequest &ms
         {
             m_logger->err("AT_MAC failure in EAP AKA'. expected: %s received: %s", expectedMac.toHexString().c_str(),
                           receivedMac.toHexString().c_str());
-
             if (networkFailingTheAuthCheck(true))
                 return;
             m_timers->t3520.start();
@@ -193,11 +192,10 @@ void NasMm::receiveAuthenticationRequestEap(const nas::AuthenticationRequest &ms
         m_usim->m_resStar = {};
 
         // Create new partial native NAS security context and continue with key derivation
-        auto kAusf = keys::CalculateKAusfForEapAkaPrime(mk);
         m_usim->m_nonCurrentNsCtx = std::make_unique<NasSecurityContext>();
         m_usim->m_nonCurrentNsCtx->tsc = msg.ngKSI.tsc;
         m_usim->m_nonCurrentNsCtx->ngKsi = msg.ngKSI.ksi;
-        m_usim->m_nonCurrentNsCtx->keys.kAusf = keys::CalculateKAusfFor5gAka(milenage.ck, milenage.ik, snn, sqnXorAk);
+        m_usim->m_nonCurrentNsCtx->keys.kAusf = keys::CalculateKAusfForEapAkaPrime(mk);
         m_usim->m_nonCurrentNsCtx->keys.abba = msg.abba.rawData.copy();
 
         keys::DeriveKeysSeafAmf(*m_base->config, currentPlmn, *m_usim->m_nonCurrentNsCtx);
@@ -214,7 +212,7 @@ void NasMm::receiveAuthenticationRequestEap(const nas::AuthenticationRequest &ms
 
             // Calculate and put mac value
             auto sendingMac = keys::CalculateMacForEapAkaPrime(kaut, *akaPrimeResponse);
-            akaPrimeResponse->attributes.putMac(sendingMac);
+            akaPrimeResponse->attributes.replaceMac(sendingMac);
 
             nas::AuthenticationResponse resp;
             resp.eapMessage = nas::IEEapMessage{};
@@ -428,7 +426,7 @@ void NasMm::receiveAuthenticationReject(const nas::AuthenticationReject &msg)
     m_usim->m_resStar = {};
     m_timers->t3516.stop();
 
-    if (msg.eapMessage.has_value())
+    if (msg.eapMessage.has_value() && msg.eapMessage->eap)
     {
         if (msg.eapMessage->eap->code == eap::ECode::FAILURE)
             receiveEapFailureMessage(*msg.eapMessage->eap);
@@ -488,12 +486,14 @@ EAutnValidationRes NasMm::validateAutn(const OctetString &rand, const OctetStrin
     auto milenage = calculateMilenage(m_usim->m_sqnMng->getSqn(), rand, false);
     OctetString receivedSQN = OctetString::Xor(receivedSQNxorAK, milenage.ak);
 
+    m_logger->debug("Received SQN [%s]", receivedSQN.toHexString().c_str());
+    m_logger->debug("SQN-MS [%s]", m_usim->m_sqnMng->getSqn().toHexString().c_str());
+
     // Verify that the received sequence number SQN is in the correct range
-    if (!m_usim->m_sqnMng->checkSqn(receivedSQN))
-        return EAutnValidationRes::SYNCHRONISATION_FAILURE;
+    bool sqn_ok = m_usim->m_sqnMng->checkSqn(receivedSQN);
 
     // Re-execute the milenage calculation (if case of sqn is changed with the received value)
-    milenage = calculateMilenage(m_usim->m_sqnMng->getSqn(), rand, false);
+    milenage = calculateMilenage(receivedSQN, rand, false);
 
     // Check MAC
     if (receivedMAC != milenage.mac_a)
@@ -502,6 +502,9 @@ EAutnValidationRes NasMm::validateAutn(const OctetString &rand, const OctetStrin
                       receivedMAC.toHexString().c_str());
         return EAutnValidationRes::MAC_FAILURE;
     }
+
+    if(!sqn_ok)
+        return EAutnValidationRes::SYNCHRONISATION_FAILURE;
 
     return EAutnValidationRes::OK;
 }

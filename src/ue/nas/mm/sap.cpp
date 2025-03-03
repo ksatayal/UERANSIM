@@ -1,9 +1,9 @@
 //
-// This file is a part of UERANSIM open source project.
-// Copyright (c) 2021 ALİ GÜNGÖR.
+// This file is a part of UERANSIM project.
+// Copyright (c) 2023 ALİ GÜNGÖR.
 //
-// The software and all associated files are licensed under GPL-3.0
-// and subject to the terms and conditions defined in LICENSE file.
+// https://github.com/aligungr/UERANSIM/
+// See README, LICENSE, and CONTRIBUTING files for licensing details.
 //
 
 #include "mm.hpp"
@@ -25,6 +25,11 @@ void NasMm::handleRrcEvent(const NmUeRrcToNas &msg)
         break;
     }
     case NmUeRrcToNas::NAS_DELIVERY: {
+        if (msg.nasPdu.length() == 0)
+        {
+            m_logger->err("Empty NAS PDU received, ignore it");
+            break;
+        }
         OctetView buffer{msg.nasPdu};
         auto nasMessage = nas::DecodeNasMessage(buffer);
         if (nasMessage != nullptr)

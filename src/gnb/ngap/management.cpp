@@ -1,9 +1,9 @@
 //
-// This file is a part of UERANSIM open source project.
-// Copyright (c) 2021 ALİ GÜNGÖR.
+// This file is a part of UERANSIM project.
+// Copyright (c) 2023 ALİ GÜNGÖR.
 //
-// The software and all associated files are licensed under GPL-3.0
-// and subject to the terms and conditions defined in LICENSE file.
+// https://github.com/aligungr/UERANSIM/
+// See README, LICENSE, and CONTRIBUTING files for licensing details.
 //
 
 #include "task.hpp"
@@ -33,7 +33,7 @@ void NgapTask::createAmfContext(const GnbAmfConfig &conf)
     m_amfCtx[ctx->ctxId] = ctx;
 }
 
-void NgapTask::createUeContext(int ueId)
+void NgapTask::createUeContext(int ueId, int32_t &requestedSliceType)
 {
     auto *ctx = new NgapUeContext(ueId);
     ctx->amfUeNgapId = -1;
@@ -42,7 +42,7 @@ void NgapTask::createUeContext(int ueId)
     m_ueCtx[ctx->ctxId] = ctx;
 
     // Perform AMF selection
-    auto *amf = selectAmf(ueId);
+    auto *amf = selectAmf(ueId, requestedSliceType);
     if (amf == nullptr)
         m_logger->err("AMF selection for UE[%d] failed. Could not find a suitable AMF.", ueId);
     else

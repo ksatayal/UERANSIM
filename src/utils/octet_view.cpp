@@ -1,13 +1,15 @@
 //
-// This file is a part of UERANSIM open source project.
-// Copyright (c) 2021 ALİ GÜNGÖR.
+// This file is a part of UERANSIM project.
+// Copyright (c) 2023 ALİ GÜNGÖR.
 //
-// The software and all associated files are licensed under GPL-3.0
-// and subject to the terms and conditions defined in LICENSE file.
+// https://github.com/aligungr/UERANSIM/
+// See README, LICENSE, and CONTRIBUTING files for licensing details.
 //
 
 #include "octet_view.hpp"
 #include "octet_string.hpp"
+
+#include <stdexcept>
 
 OctetView::OctetView(const OctetString &data) : data(data.data()), index(0), size(data.length())
 {
@@ -21,6 +23,8 @@ OctetString OctetView::readOctetString(int length) const
 {
     if (length == 0)
         return {};
+    else if (index + length > size)
+        throw std::out_of_range("Invalid arguments for readOctetString");
 
     std::vector<uint8_t> v{data + index, data + index + length};
     index += length;

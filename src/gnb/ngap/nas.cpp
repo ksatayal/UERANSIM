@@ -1,9 +1,9 @@
 //
-// This file is a part of UERANSIM open source project.
-// Copyright (c) 2021 ALİ GÜNGÖR.
+// This file is a part of UERANSIM project.
+// Copyright (c) 2023 ALİ GÜNGÖR.
 //
-// The software and all associated files are licensed under GPL-3.0
-// and subject to the terms and conditions defined in LICENSE file.
+// https://github.com/aligungr/UERANSIM/
+// See README, LICENSE, and CONTRIBUTING files for licensing details.
 //
 
 #include "encode.hpp"
@@ -20,13 +20,53 @@
 #include <asn/ngap/ASN_NGAP_ProtocolIE-Field.h>
 #include <asn/ngap/ASN_NGAP_RerouteNASRequest.h>
 #include <asn/ngap/ASN_NGAP_UplinkNASTransport.h>
+#include <ue/nas/enc.hpp>
+#include "encode.hpp"
+#include <stdexcept>
 
 namespace nr::gnb
 {
 
-void NgapTask::handleInitialNasTransport(int ueId, const OctetString &nasPdu, int64_t rrcEstablishmentCause,
-                                         const std::optional<GutiMobileIdentity> &sTmsi)
+int32_t extractSliceInfoAndModifyPdu(OctetString &nasPdu) {
+    nas::RegistrationRequest *regRequest = nullptr;
+    int32_t requestedSliceType = -1;
+    const uint8_t *m_data = nasPdu.data();
+    size_t m_dataLength = nasPdu.length(); 
+    OctetView octetView(m_data, m_dataLength);
+    auto nasMessage = nas::DecodeNasMessage(octetView);  
+    if (nasMessage->epd == nas::EExtendedProtocolDiscriminator::MOBILITY_MANAGEMENT_MESSAGES)
+    {
+        nas::MmMessage *mmMessage = dynamic_cast<nas::MmMessage *>(nasMessage.get());
+        if (mmMessage)
+        {
+            nas::PlainMmMessage *plainMmMessage = dynamic_cast<nas::PlainMmMessage *>(mmMessage);
+            if (plainMmMessage)
+            {
+                regRequest = dynamic_cast<nas::RegistrationRequest *>(plainMmMessage);
+                if (regRequest)
+                {
+                    auto sz = regRequest->requestedNSSAI->sNssais.size();
+                    if (sz > 0) {
+                        requestedSliceType = static_cast<uint8_t>(regRequest->requestedNSSAI->sNssais[0].sst);
+                    }
+                }
+            }
+        }
+    }
+    if (regRequest && regRequest->requestedNSSAI) 
+        regRequest->requestedNSSAI = std::nullopt;  
+
+    OctetString modifiedNasPdu;
+    nas::EncodeNasMessage(*nasMessage, modifiedNasPdu);
+    nasPdu = std::move(modifiedNasPdu);
+    return requestedSliceType;
+}
+
+void NgapTask::handleInitialNasTransport(int ueId, OctetString &nasPdu, int64_t rrcEstablishmentCause,
+                                            const std::optional<GutiMobileIdentity> &sTmsi)
 {
+    int32_t requestedSliceType = extractSliceInfoAndModifyPdu(nasPdu);
+
     m_logger->debug("Initial NAS message received from UE[%d]", ueId);
 
     if (m_ueCtx.count(ueId))
@@ -35,7 +75,7 @@ void NgapTask::handleInitialNasTransport(int ueId, const OctetString &nasPdu, in
         return;
     }
 
-    createUeContext(ueId);
+    createUeContext(ueId, requestedSliceType);
 
     auto *ueCtx = findUeContext(ueId);
     if (ueCtx == nullptr)
@@ -164,6 +204,7 @@ void NgapTask::receiveRerouteNasRequest(int amfId, ASN_NGAP_RerouteNASRequest *m
 
     auto ngapPdu = asn::New<ASN_NGAP_NGAP_PDU>();
     ngapPdu->present = ASN_NGAP_NGAP_PDU_PR_initiatingMessage;
+    ngapPdu->choice.initiatingMessage = asn::New<ASN_NGAP_InitiatingMessage>();
     ngapPdu->choice.initiatingMessage->procedureCode = ASN_NGAP_ProcedureCode_id_InitialUEMessage;
     ngapPdu->choice.initiatingMessage->criticality = ASN_NGAP_Criticality_ignore;
     ngapPdu->choice.initiatingMessage->value.present = ASN_NGAP_InitiatingMessage__value_PR_InitialUEMessage;

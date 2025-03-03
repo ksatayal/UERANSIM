@@ -1,9 +1,9 @@
 //
-// This file is a part of UERANSIM open source project.
-// Copyright (c) 2021 ALİ GÜNGÖR.
+// This file is a part of UERANSIM project.
+// Copyright (c) 2023 ALİ GÜNGÖR.
 //
-// The software and all associated files are licensed under GPL-3.0
-// and subject to the terms and conditions defined in LICENSE file.
+// https://github.com/aligungr/UERANSIM/
+// See README, LICENSE, and CONTRIBUTING files for licensing details.
 //
 
 #include "task.hpp"
@@ -51,16 +51,21 @@ void UeRrcTask::receiveSib1(int cellId, const ASN_RRC_SIB1 &msg)
     auto plmnIdentity = plmnIdentityInfo->plmn_IdentityList.list.array[0];
     desc.sib1.plmn = asn::rrc::GetPlmnId(*plmnIdentity);
 
-    auto *barringInfo = msg.uac_BarringInfo->uac_BarringInfoSetList.list.array[0];
 
-    int barringBits = asn::GetBitStringInt<7>(barringInfo->uac_BarringForAccessIdentity);
-    desc.sib1.aiBarringSet.ai15 = bits::BitAt<0>(barringBits);
-    desc.sib1.aiBarringSet.ai14 = bits::BitAt<1>(barringBits);
-    desc.sib1.aiBarringSet.ai13 = bits::BitAt<2>(barringBits);
-    desc.sib1.aiBarringSet.ai12 = bits::BitAt<3>(barringBits);
-    desc.sib1.aiBarringSet.ai11 = bits::BitAt<4>(barringBits);
-    desc.sib1.aiBarringSet.ai2 = bits::BitAt<5>(barringBits);
-    desc.sib1.aiBarringSet.ai1 = bits::BitAt<6>(barringBits);
+    // The UAC_BarringInfoSetList is optional
+    // C.f.: https://www.nrexplained.com/rrc/ge0#SIB1
+    if(msg.uac_BarringInfo){
+        auto *barringInfo = msg.uac_BarringInfo->uac_BarringInfoSetList.list.array[0];
+
+        int barringBits = asn::GetBitStringInt<7>(barringInfo->uac_BarringForAccessIdentity);
+        desc.sib1.aiBarringSet.ai15 = bits::BitAt<0>(barringBits);
+        desc.sib1.aiBarringSet.ai14 = bits::BitAt<1>(barringBits);
+        desc.sib1.aiBarringSet.ai13 = bits::BitAt<2>(barringBits);
+        desc.sib1.aiBarringSet.ai12 = bits::BitAt<3>(barringBits);
+        desc.sib1.aiBarringSet.ai11 = bits::BitAt<4>(barringBits);
+        desc.sib1.aiBarringSet.ai2 = bits::BitAt<5>(barringBits);
+        desc.sib1.aiBarringSet.ai1 = bits::BitAt<6>(barringBits);
+    }
 
     desc.sib1.hasSib1 = true;
 

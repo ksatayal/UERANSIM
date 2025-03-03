@@ -1,9 +1,9 @@
 //
-// This file is a part of UERANSIM open source project.
-// Copyright (c) 2021 ALİ GÜNGÖR.
+// This file is a part of UERANSIM project.
+// Copyright (c) 2023 ALİ GÜNGÖR.
 //
-// The software and all associated files are licensed under GPL-3.0
-// and subject to the terms and conditions defined in LICENSE file.
+// https://github.com/aligungr/UERANSIM/
+// See README, LICENSE, and CONTRIBUTING files for licensing details.
 //
 
 #include "keys.hpp"
@@ -91,7 +91,7 @@ std::pair<OctetString, OctetString> CalculateCkPrimeIkPrime(const OctetString &c
 OctetString CalculateMk(const OctetString &ckPrime, const OctetString &ikPrime, const Supi &supiIdentity)
 {
     OctetString key = OctetString::Concat(ikPrime, ckPrime);
-    OctetString input = OctetString::FromAscii("EAP-AKA'" + supiIdentity.type + "-" + supiIdentity.value);
+    OctetString input = OctetString::FromAscii("EAP-AKA'" + supiIdentity.value);
 
     // Calculating the 208-octet output
     return crypto::CalculatePrfPrime(key, input, 208);
@@ -103,11 +103,11 @@ OctetString CalculateMacForEapAkaPrime(const OctetString &kaut, const eap::EapAk
     eap::EapAkaPrime copy{message.code, message.id, message.subType};
 
     // Deep copy each attribute
-    message.attributes.forEachEntry(
+    message.attributes.forEachEntryOrdered(
         [&copy](eap::EAttributeType attr, const OctetString &v) { copy.attributes.putRawAttribute(attr, v.copy()); });
 
     // Except the MAC field
-    copy.attributes.putMac(OctetString::FromSpare(16));
+    copy.attributes.replaceMac(OctetString::FromSpare(16));
 
     OctetString input{};
     eap::EncodeEapPdu(input, copy);

@@ -1,9 +1,9 @@
 //
-// This file is a part of UERANSIM open source project.
-// Copyright (c) 2021 ALİ GÜNGÖR.
+// This file is a part of UERANSIM project.
+// Copyright (c) 2023 ALİ GÜNGÖR.
 //
-// The software and all associated files are licensed under GPL-3.0
-// and subject to the terms and conditions defined in LICENSE file.
+// https://github.com/aligungr/UERANSIM/
+// See README, LICENSE, and CONTRIBUTING files for licensing details.
 //
 
 #pragma once
@@ -135,6 +135,7 @@ enum class EEapType
 class EapAttributes
 {
     std::array<std::optional<OctetString>, 256> attributes{};
+    std::vector<int> order_received{};
 
   public:
     [[nodiscard]] OctetString getRand() const;
@@ -147,12 +148,14 @@ class EapAttributes
   public:
     void putRes(const OctetString &value);
     void putMac(const OctetString &value);
+    void replaceMac(const OctetString &value);
     void putKdf(int value);
     void putClientErrorCode(int code);
     void putAuts(OctetString &&auts);
 
   public:
     void forEachEntry(const std::function<void(EAttributeType, const OctetString &)> &fun) const;
+    void forEachEntryOrdered(const std::function<void(EAttributeType, const OctetString &)> &fun) const;
     void putRawAttribute(EAttributeType key, OctetString &&value);
 };
 
