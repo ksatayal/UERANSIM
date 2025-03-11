@@ -42,14 +42,11 @@ namespace nr::gnb
 void GnbRrcTask::receiveRrcSetupRequest(int ueId, const ASN_RRC_RRCSetupRequest &msg)
 {
     auto *ue = tryFindUe(ueId);
-    bool ueEntryExisted = false;
     if (ue)
     {
         // TODO: handle this more properly
         m_logger->warn("Discarding RRC Setup Request, UE context already exists");
-        // return;
-        m_logger->warn("patch for atayalan jira G1-1075 UpLink (http upload) stability issue");
-        ueEntryExisted = true;
+        return;
     }
 
     if (msg.rrcSetupRequest.ue_Identity.present == ASN_RRC_InitialUE_Identity_PR_NOTHING)
@@ -57,9 +54,7 @@ void GnbRrcTask::receiveRrcSetupRequest(int ueId, const ASN_RRC_RRCSetupRequest 
         m_logger->err("Bad constructed RRC message ignored");
         return;
     }
-    if(!ueEntryExisted) {
-        ue = createUe(ueId);
-    }
+    ue = createUe(ueId);
 
     if (msg.rrcSetupRequest.ue_Identity.present == ASN_RRC_InitialUE_Identity_PR_ng_5G_S_TMSI_Part1)
     {
