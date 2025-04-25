@@ -14,7 +14,8 @@
 namespace udp
 {
 
-UdpServer::UdpServer() : sockets{Socket::CreateUdp4(), Socket::CreateUdp6()}
+//UdpServer::UdpServer() : sockets{Socket::CreateUdp4(), Socket::CreateUdp6()}
+UdpServer::UdpServer() : sockets{Socket::CreateUdp4()}
 {
 }
 
