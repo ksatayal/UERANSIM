@@ -37,6 +37,7 @@
 #include <vector>
 
 #include <utils/libc_error.hpp>
+#include <utils/constants.hpp>
 
 #define ROUTING_TABLE_PREFIX "rt_"
 #define MAX_INTERFACE_COUNT 1024
@@ -86,6 +87,11 @@ static const char *NextInterfaceName(const std::string &prefix)
     std::set<std::string> names;
 
     struct ifaddrs *addrs, *tmp;
+
+    // requestedName is read from *m_base->config->tunName; that is: ueyaml tunName value
+    if( prefix != cons::TunNamePrefix) {
+        return strdup(prefix.c_str());
+    }
 
     getifaddrs(&addrs);
     tmp = addrs;
@@ -327,6 +333,7 @@ int AllocateTun(const char *ifPrefix, char **allocatedName)
 {
     // acquire the configuration lock
     const std::lock_guard<std::mutex> lock(configMutex);
+
 
     const char *ifName = NextInterfaceName(ifPrefix);
     if (!ifName)
